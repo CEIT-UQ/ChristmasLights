@@ -10,13 +10,13 @@
 #define P_FADE      4
 #define P_SKIP  5
 #define P_DANCE  6
-#define P_PAT  7
+#define P_JINGLE  7
 #define P_LIGHTNING  8
 
-#define PIN_1 = 5 
-#define PIN_2 = 6 
+#define PIN_1  5 
+#define PIN_2  2 
 
-int led = 6;           // the pin that the LED is attached to
+
 int brightness = 0;    // how bright the LED is
 int fadeAmount = 70;    // how many points to fade the LED by
 int lightPattern = P_NONE;
@@ -34,25 +34,23 @@ void processmessage(byte* payload);
 void playPattern(void);
 
 
-void callback(char* topic, byte* payload, unsigned int length) {
+void callback(char* topic, byte* payload, unsigned int length){
   payload[length] = '\0';
   Serial.println( (char*) payload);
   processmessage(payload);
 }
 
 
-void setup_MQTT() 
-{
+void setup_MQTT() {
   // EEPROM locations:
   // Unique MAC address can be stored in EEPROM using 'setMACaddress' sketch, which sets the last 3 bytes of this address.
   const int eepromMacFlag = 0; // 1 byte
   int eepromMacAddress = 1; // 3 bytes
   // Default MAC address for the ethernet controller.
-  static byte mac[] = {
-    0x90, 0xA2, 0xDA, 0x00, 0xFF, 0xFF  }; 
+  static byte mac[] = {0x90, 0xA2, 0xDA, 0x00, 0xFF, 0xFF}; 
 
   // Retrieve MAC address from EEPROM if present
-  if (EEPROM.read(eepromMacFlag) == '#') {
+  if (EEPROM.read(eepromMacFlag) == '#'){
     Serial.println("Retrieving MAC address from EEPROM");
     for (int i = 3; i < 6; i++)
       mac[i] = EEPROM.read(eepromMacAddress++);
@@ -95,8 +93,8 @@ void setup_MQTT()
 
 
 void setup() {
-  pinMode(6,OUTPUT);
-  pinMode(5,OUTPUT);
+  pinMode(PIN_1,OUTPUT);
+  pinMode(PIN_2,OUTPUT);
   //Ethernet.begin(mac,ip);
   Serial.begin(9600);
   setup_MQTT();
@@ -118,42 +116,40 @@ void loop() {
 }
 
 
-void processmessage( byte* payload) 
-{ 
-  if( strcmp((char*)payload, "alternating")==0){
+void processmessage( byte* payload) { 
+  if( strcmp((char*)payload, "alternating")==0) {
     lightPattern = P_ALTERNATE;
   } 
-  else if (strcmp((char*)payload, "onoff")==0){
+  else if (strcmp((char*)payload, "onoff")==0) {
     lightPattern = P_ONOFF;
   } 
-  else if (strcmp((char*)payload, "fade")==0){
+  else if (strcmp((char*)payload, "fade")==0) {
     lightPattern = P_FADE; 
   }
   
-  else if (strcmp((char*)payload, "fast")==0){
+  else if (strcmp((char*)payload, "fast")==0) {
     lightPattern = P_FAST; 
   }
   
-  else if (strcmp((char*)payload, "skip")==0){
+  else if (strcmp((char*)payload, "skip")==0) {
     lightPattern = P_SKIP; 
   }
   
-  else if (strcmp((char*)payload, "dance")==0){
+  else if (strcmp((char*)payload, "dance")==0) {
     lightPattern = P_DANCE; 
   }
   
-  else if (strcmp((char*)payload, "pat")==0){
-    lightPattern = P_PAT; 
+  else if (strcmp((char*)payload, "jingle")==0) {
+    lightPattern = P_JINGLE; 
   }
   
-  else if (strcmp((char*)payload, "lightning")==0){
+  else if (strcmp((char*)payload, "lightning")==0) {
     lightPattern = P_LIGHTNING;
   }
 }
 
 
-void playPattern(void)
-{
+void playPattern(void) {
   switch (lightPattern) {
   case P_NONE:
     break;
@@ -182,8 +178,8 @@ void playPattern(void)
     dance();
     break;
     
-  case P_PAT:
-    pat();
+  case P_JINGLE:
+    jingle();
     break;
   
   case P_LIGHTNING:
@@ -195,113 +191,105 @@ void playPattern(void)
 
 //_______ PATTTERNS _________
 
-void onoff()
-{ 
-  digitalWrite(6,HIGH);
-  digitalWrite(5,HIGH);
+void onoff(){ 
+  digitalWrite(PIN_2,HIGH);
+  digitalWrite(PIN_1,HIGH);
   delay(500);
-  digitalWrite(6,LOW);
-  digitalWrite(5,LOW);
+  digitalWrite(PIN_2,LOW);
+  digitalWrite(PIN_1,LOW);
   delay(500);
 }
 
 
-void alternating()
-{
-  digitalWrite(6,HIGH);
-  digitalWrite(5,LOW);
+void alternating(){
+  digitalWrite(PIN_2,HIGH);
+  digitalWrite(PIN_1,LOW);
   delay(1000);
-  digitalWrite(6,LOW);
-  digitalWrite(5,HIGH);
+  digitalWrite(PIN_2,LOW);
+  digitalWrite(PIN_1,HIGH);
   delay(1000);
 }
 
 
-void fade()
-{
-  analogWrite(6, brightness); analogWrite(5, brightness);  brightness = brightness + fadeAmount;if (brightness == 0 || brightness == 255) {fadeAmount = -fadeAmount ; } delay(500);digitalWrite(5,HIGH); delay(50);digitalWrite(5,LOW); delay(50);digitalWrite(5,HIGH); delay(50);digitalWrite(5,LOW); delay(500);
+void fade(){
+  analogWrite(6, brightness); analogWrite(PIN_1, brightness);  brightness = brightness + fadeAmount;if (brightness == 0 || brightness == 255) {fadeAmount = -fadeAmount ; } delay(500);digitalWrite(PIN_1,HIGH); delay(50);digitalWrite(PIN_1,LOW); delay(50);digitalWrite(PIN_1,HIGH); delay(50);digitalWrite(PIN_1,LOW); delay(500);
 }
 
 
-void fast()
-{
-  digitalWrite(5,HIGH); delay(100);digitalWrite(5,LOW); delay(100);
+void fast(){
+  digitalWrite(PIN_1,HIGH); delay(100);digitalWrite(PIN_1,LOW); delay(100);
 }
 
 
-void skip()
-{
- analogWrite(6, brightness); digitalWrite(5, HIGH);  brightness = brightness + fadeAmount;if (brightness == 0 || brightness == 255) {fadeAmount = -fadeAmount ; } delay(200); digitalWrite(5,LOW); delay(200);
+void skip(){
+ analogWrite(PIN_2, brightness); digitalWrite(PIN_1, HIGH);  brightness = brightness + fadeAmount;if (brightness == 0 || brightness == 255) {fadeAmount = -fadeAmount ; } delay(200); digitalWrite(PIN_1,LOW); delay(200);
 }
 
 
-void dance()
-{
-  digitalWrite(6,HIGH);
-  digitalWrite(5,LOW);
+void dance(){
+  digitalWrite(PIN_2,HIGH);
+  digitalWrite(PIN_1,LOW);
   delay(200);
-  digitalWrite(6,LOW);
-  digitalWrite(5,HIGH);
+  digitalWrite(PIN_2,LOW);
+  digitalWrite(PIN_1,HIGH);
   delay(500);
-  digitalWrite(6,HIGH);
-  digitalWrite(5,HIGH);
+  digitalWrite(PIN_2,HIGH);
+  digitalWrite(PIN_1,HIGH);
   delay(250);
-  digitalWrite(6,LOW);
-  digitalWrite(5,LOW);
+  digitalWrite(PIN_2,LOW);
+  digitalWrite(PIN_1,LOW);
   delay(250);
 }
 
-void pat()
-{
-  digitalWrite(6,HIGH);
-  digitalWrite(5,LOW);
+void jingle(){
+  digitalWrite(PIN_2,HIGH);
+  digitalWrite(PIN_1,LOW);
   delay(200);
-  digitalWrite(6,LOW);
+  digitalWrite(PIN_2,LOW);
   delay(300);
-  digitalWrite(6,HIGH);
+  digitalWrite(PIN_2,HIGH);
   delay(200);
-  digitalWrite(6,LOW);
+  digitalWrite(PIN_2,LOW);
   delay(250);
-  digitalWrite(5,HIGH);
+  digitalWrite(PIN_1,HIGH);
   delay(300);  
-  digitalWrite(5,LOW);
-  digitalWrite(6,LOW);
+  digitalWrite(PIN_1,LOW);
+  digitalWrite(PIN_2,LOW);
   delay(450);  
 }
 
 
-void lightning()
-{
-  digitalWrite(6,HIGH);
-  digitalWrite(5,LOW);
+void lightning(){
+  digitalWrite(PIN_2,HIGH);
+  digitalWrite(PIN_1,LOW);
   delay(200);
-  digitalWrite(6,LOW);
+  digitalWrite(PIN_2,LOW);
   delay(300);
-  digitalWrite(6,HIGH);
+  digitalWrite(PIN_2,HIGH);
   delay(200);
-  digitalWrite(6,LOW);
+  digitalWrite(PIN_2,LOW);
   delay(250);
-  digitalWrite(5,HIGH);
+  digitalWrite(PIN_1,HIGH);
   delay(300);  
-  digitalWrite(5,LOW);
-  digitalWrite(6,LOW);
+  digitalWrite(PIN_1,LOW);
+  digitalWrite(PIN_2,LOW);
   delay(900); 
-  digitalWrite(5,HIGH);
-  digitalWrite(6,HIGH);
+  digitalWrite(PIN_1,HIGH);
+  digitalWrite(PIN_2,HIGH);
   delay(50);  
-  digitalWrite(5,LOW);
-  digitalWrite(6,LOW);
+  digitalWrite(PIN_1,LOW);
+  digitalWrite(PIN_2,LOW);
   delay(50);    
-  digitalWrite(5,HIGH);
-  digitalWrite(6,HIGH);
+  digitalWrite(PIN_1,HIGH);
+  digitalWrite(PIN_2,HIGH);
   delay(50);  
-  digitalWrite(5,LOW);
-  digitalWrite(6,LOW);
+  digitalWrite(PIN_1,LOW);
+  digitalWrite(PIN_2,LOW);
   delay(50);  
-  digitalWrite(5,HIGH);
-  digitalWrite(6,HIGH);
+  digitalWrite(PIN_1,HIGH);
+  digitalWrite(PIN_2,HIGH);
   delay(50);  
-  digitalWrite(5,LOW);
-  digitalWrite(6,LOW);
+  digitalWrite(PIN_1,LOW);
+  digitalWrite(PIN_2,LOW);
   delay(50);   
 }
